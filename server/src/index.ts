@@ -5,8 +5,10 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes";
 import expenseRoutes from "./routes/expenseRoutes";
 import aiRoutes from "./routes/aiRoutes";
-
 dotenv.config();
+import { supabase } from "./config/supabaseClient";
+
+
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
@@ -20,11 +22,17 @@ app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/ai", aiRoutes);
 
-// Health check
-app.get("/", (req: Request, res: Response) => {
-  res.send("API is running");
-});
+const testDBConnection = async () => {
+  const { data, error } = await supabase.from("users").select("id").limit(1);
 
-app.listen(PORT, () => {
+  if (error) {
+    console.error("❌ Database connection failed:", error.message);
+  } else {
+    console.log("✅ Connected to Supabase. Users table check:", data);
+  }
+};
+
+app.listen(PORT, async() => {
   console.log(`Server running on http://localhost:${PORT}`);
+  await testDBConnection()
 });
